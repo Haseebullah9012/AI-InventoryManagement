@@ -133,7 +133,7 @@ export default function Home() {
         
         <div className="bg-slate-700 rounded-xl p-8">
           
-          <form className="mb-8" onSubmit={handleAddNewItem}>
+          <form className="mb-6 pb-4 border-b border-slate-500" onSubmit={handleAddNewItem}>
             <input className="rounded-md bg-slate-600 py-1 px-3 mx-1 w-52 my-2"
               placeholder="Enter Item Name"
               type="text"
@@ -154,8 +154,8 @@ export default function Home() {
               <li key={id} className="my-2 flex">
                 <span className="w-56 content-center">{item.name}</span>
                 <span className="w-20 content-center">{item.qty}</span>
-                <button className="border border-black bg-slate-900 w-7 h-7 mx-1 rounded-md text-slate-300" onClick={() => handleItemIncrement(item.name)}>+</button>
-                <button className="border border-black bg-slate-900 w-7 h-7 mx-1 rounded-md text-slate-300" onClick={() => handleItemDecrement(item.name)}>-</button>
+                <button className="border border-black bg-slate-900 w-7 h-7 px-2 mx-1 rounded-md text-slate-300" onClick={() => handleItemIncrement(item.name)}>+</button>
+                <button className="border border-black bg-slate-900 w-7 h-7 px-2 mx-1 rounded-md text-slate-300" onClick={() => handleItemDecrement(item.name)}>-</button>
               </li>
             ))}
             
