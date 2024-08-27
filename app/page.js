@@ -16,7 +16,7 @@ import { db } from '@/app/firebase';
 
 
 export default function Home() {
-  
+
   const [newItem, setnewItem] = useState({name:'', qty:''});
   const [inventory, setInventory] = useState([
     { id:1, name: "Temp Item1", qty: 3},
