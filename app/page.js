@@ -1,11 +1,13 @@
 'use client'
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { collection, doc, getDoc,getDocs, addDoc,updateDoc,deleteDoc, } from 'firebase/firestore';
-import { db } from '@/app/firebase';
+import { db } from './firebase';
+
+import { getImageLabels } from './actions';
 
 //Potential New Features to Implement
-// User Autentication (Firebase Auth)
+// User Autentication (Clerk Auth)
 // Search and Filter
 // Pagination
 // More Item Deatils
@@ -37,7 +39,7 @@ export default function Home() {
       }
       catch (error) {
         console.error('Error Retreiving Items from Database: ', error);
-      } 
+      }
     }
     
     updateInventory();
@@ -126,6 +128,15 @@ export default function Home() {
     }   
   };
 
+  
+  const [response, setResponse] = useState('');
+  const formDataRef = useRef(null);
+
+  const handleImageInput = async (formData) => {
+    await getImageLabels(formData).then(setResponse);
+    formDataRef.current.reset();
+  };
+  
   return (
     <main className="flex min-h-screen flex-col items-center justify-between sm:p-24 p-4 bg-slate-900">
       <div className="max-w-5xl w-full items-center justify-between font-mono text-s">
@@ -163,6 +174,26 @@ export default function Home() {
               <p className="text-slate-400">Currently, No items in the Inventory...</p>
             )}
           </ul>
+
+          <div className='mt-20 mb-10'>
+            <form className="" action={handleImageInput} ref={formDataRef}>
+              <input className="rounded-md bg-slate-600 px-2 py-1 w-full my-2"
+                placeholder="Paste Image URL"
+                type="text"
+                name='imageURL'
+              />
+              <span>OR</span>
+              <input className="rounded-md bg-slate-600 pr-2 mx-4 w-80 text-slate-200"
+                type="file"
+                name='imageFile'
+                accept="image/*"
+              />
+              <button className="border border-black bg-slate-900 py-2 px-4 rounded-md text-slate-300" type='submit'>Get Response</button>
+            </form>
+          </div>
+
+          <pre className="">{response}</pre>
+          
         </div>
 
       </div>
