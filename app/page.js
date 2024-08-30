@@ -6,6 +6,7 @@ import {Camera} from "react-camera-pro";
 import { db } from './firebase';
 
 import { getImageLabels } from './actions';
+import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerTrigger, DrawerClose } from "@/components/ui/drawer"
 
 //Potential New Features to Implement
 // User Autentication (Clerk Auth)
@@ -25,6 +26,10 @@ export default function Home() {
     { id:1, name: "Temp Item1", qty: 3},
     { id:2, name: "Temp Item2", qty: 7},
   ]);
+  
+  const [response, setResponse] = useState('');
+  const [showCamera, setShowCamera] = useState(false);
+  
 
   useEffect(() => {
     const updateInventory = async () => {
@@ -129,59 +134,44 @@ export default function Home() {
     }   
   };
 
-  
-  const [response, setResponse] = useState('');
-  const formDataRef = useRef(null);
-  const camera = useRef(null);
-  const [showCameraScreen, setShowCameraScreen] = useState(false);
-  const [showUploadScreen, setShowUploadScreen] = useState(false);
-  
-  const handleImageInput = async (formData) => {
-    setShowUploadScreen(false);
-    setResponse('');
-    await getImageLabels(formData).then(setResponse);
-    formDataRef.current.reset();
-  };
-
-  const capture = async () => {
-    const imageSrc = camera.current.takePhoto();
-    setShowCameraScreen(false);
-    setResponse('');
-    await getImageLabels(imageSrc).then(setResponse);
-  };
-  
   return (
-    <main className="flex min-h-screen flex-col items-center justify-between sm:p-24 p-4 bg-slate-900">
+    <main className="flex min-h-screen flex-col items-center justify-between sm:p-24 p-4 bg-slate-900 text-slate-100">
       <div className="max-w-5xl w-full items-center justify-between font-mono text-s">
         <h1 className="text-4xl p-4 text-center">AI Inventory Management</h1>
         
         <div className="bg-slate-700 rounded-xl p-8">
           
-          <form className="mb-6 pb-4 border-b border-slate-500" onSubmit={handleAddNewItem}>
-            <input className="rounded-md bg-slate-600 py-1 px-3 mr-1 w-52 my-2"
-              placeholder="Enter Item Name"
-              type="text"
-              value={newItem.name}
-              onChange={(e) => setnewItem({...newItem, name:e.target.value})}
-            />
-            <input className="rounded-md bg-slate-600 py-1 px-3 mr-1 w-20 my-2"
-              placeholder="Qty."
-              type="number"
-              value={newItem.qty}
-              onChange={(e) => setnewItem({...newItem, qty:e.target.value})}
-            />
-            <button className="border border-black bg-slate-900 py-1 px-2 mr-1 rounded-md text-slate-300" type="submit">Add Item</button>
+          <div className="mb-6 pb-4 border-b border-slate-500" >
+            <form className='inline-block' onSubmit={handleAddNewItem}>
+              <input className="rounded-md bg-slate-600 py-1 px-3 mr-1 w-52 my-2"
+                placeholder="Enter Item Name"
+                type="text"
+                value={newItem.name}
+                onChange={(e) => setnewItem({...newItem, name:e.target.value})}
+              />
+              <input className="rounded-md bg-slate-600 py-1 px-3 mr-1 w-20 my-2"
+                placeholder="Qty."
+                type="number"
+                value={newItem.qty}
+                onChange={(e) => setnewItem({...newItem, qty:e.target.value})}
+              />
+              <button className="border border-black bg-slate-900 py-1 px-2 mr-1 rounded-md text-slate-300" type="submit">Add Item</button>
+            </form>
+            
             <span className='mx-2'>OR</span>
-            <button className="border border-black bg-slate-900 py-1 px-2 mr-1 rounded-md text-slate-300" onClick={(e) => setShowCameraScreen(true)}>
-              Camera
-            </button>
-            <span className='mx-2'>OR</span>
-            <button className="border border-black bg-slate-900 py-1 px-2 mr-1 rounded-md text-slate-300" onClick={(e) => setShowUploadScreen(true)}>
-              Upload
-            </button>
-          </form>
+            <Drawer onClose={() => { setResponse(''); setShowCamera(false); }}>
+              <DrawerTrigger className="border border-black bg-slate-900 py-1 px-2 mr-1 rounded-md text-slate-300">Camera</DrawerTrigger>
+              <DrawerCameraScreen />
+            </Drawer>
 
-          <ul>
+            <span className='mx-2'>OR</span>
+            <Drawer onClose={() => setResponse('')}>
+              <DrawerTrigger className="border border-black bg-slate-900 py-1 px-2 mr-1 rounded-md text-slate-300">Upload</DrawerTrigger>
+              <DrawerUploadImage />
+            </Drawer>
+          </div>
+          
+          <ul id="inventory-items">
             {inventory.map((item, id) => (
               <li key={id} className="my-2 flex">
                 <span className="w-56 content-center">{item.name}</span>
@@ -195,38 +185,89 @@ export default function Home() {
               <p className="text-slate-400">Currently, No items in the Inventory...</p>
             )}
           </ul>
-
-          {showCameraScreen && (
-            <div className='my-10 flex'>
-              <Camera ref={camera} aspect={1/1}/>
-              <img src="favicon.ico" className='absolute bottom-0'  width="70px" height="70px" alt="Logo" onClick={capture}/> 
-            </div>
-          )}
-
-          {showUploadScreen && (
-            <div className='mt-20 mb-10'>
-              <form className="" action={handleImageInput} ref={formDataRef}>
-                <input className="rounded-md bg-slate-600 px-2 py-1 w-full my-2"
-                  placeholder="Paste Image URL"
-                  type="text"
-                  name='imageURL'
-                />
-                <span>OR</span>
-                <input className="rounded-md bg-slate-600 pr-2 mx-4 w-80 text-slate-200"
-                  type="file"
-                  name='imageFile'
-                  accept="image/*"
-                />
-                <button className="border border-black bg-slate-900 py-2 px-4 rounded-md text-slate-300" type='submit'>Get Response</button>
-              </form>
-            </div>
-          )}
-          
-          <pre className="mt-10">{response}</pre>
-          
+  
         </div>
 
       </div>
     </main>
   );
+
+  
+  /* Components */
+
+  function DrawerUploadImage() {
+    
+    const formDataRef = useRef(null);
+    
+    const handleImageInput = async (formData) => {
+      setResponse('Waiting...'); //This is not Working
+      await getImageLabels(formData).then(setResponse);
+      formDataRef.current.reset();
+    };
+    
+    return (
+      <DrawerContent className="bg-slate-800 text-slate-100">
+        <DrawerHeader className="mb-8 p-8 sm:p-10">
+          <DrawerTitle className="text-slate-300 mb-2">Get some Inventory Item's Image Online or Upload from Device</DrawerTitle>
+          <form action={handleImageInput} ref={formDataRef}>
+            <input className="rounded-md bg-slate-600 px-2 py-1 w-5/6 my-2 block"
+              placeholder="Paste Image URL"
+              type="text"
+              name='imageURL'
+            />
+            <span>OR</span>
+            <input className="rounded-md bg-slate-600 pr-2 mx-4 w-80 mb-6 text-slate-200"
+              type="file"
+              name='imageFile'
+              accept="image/*"
+            />
+            <button className="border border-black bg-slate-900 py-2 px-4 rounded-md text-slate-300" type='submit'>Get Response</button>
+          </form>
+
+          <pre className="mt-2">{response}</pre>
+
+        </DrawerHeader>
+      </DrawerContent>  
+    );
+  }
+  
+  function DrawerCameraScreen() {
+    
+    const camera = useRef(null);
+    
+    const captureImage = async () => {
+      const imageSrc = camera.current.takePhoto();
+      setShowCamera(false);
+      setResponse('Waiting...');
+      await getImageLabels(imageSrc).then(setResponse);
+    };
+
+    const handleOpenCamera = () => {
+      setShowCamera(true);
+      setResponse('');
+    };
+
+    return (
+      <DrawerContent className={`bg-slate-800 text-slate-100 ${showCamera ? "h-full":"h-2/5"} `}>
+        <DrawerHeader className="inline-block p-8 sm:p-10">
+          <DrawerTitle className="text-slate-300 mb-2">Take an Image of Inventory Items with your Device Camera</DrawerTitle>
+          <button className="border border-black bg-slate-900 py-1 px-2 mr-1 rounded-md text-slate-300" onClick={handleOpenCamera}>Open Camera</button>
+
+          {showCamera && (
+            <div>
+              <Camera ref={camera}/>
+              <div className='absolute bottom-10 left-[40%] right-[40%] text-center'>
+                <button className='border-4 border-slate-900 bg-slate-200 rounded-full w-12 h-12' onClick={captureImage}></button>
+              </div>
+              <DrawerClose className='absolute top-4 left-[38%] right-[38%] border border-slate-900 bg-slate-800 py-1 px-2 rounded-md'>
+                Close
+              </DrawerClose>
+            </div>
+          )}
+          <pre className="mt-8">{response}</pre>
+        </DrawerHeader>
+      </DrawerContent>
+    );
+  }
+
 }
