@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { collection, doc, getDoc,getDocs, addDoc,updateDoc,deleteDoc, } from 'firebase/firestore';
+import {Camera} from "react-camera-pro";
 import { db } from './firebase';
 
 import { getImageLabels } from './actions';
@@ -131,10 +132,22 @@ export default function Home() {
   
   const [response, setResponse] = useState('');
   const formDataRef = useRef(null);
-
+  const camera = useRef(null);
+  const [showCameraScreen, setShowCameraScreen] = useState(false);
+  const [showUploadScreen, setShowUploadScreen] = useState(false);
+  
   const handleImageInput = async (formData) => {
+    setShowUploadScreen(false);
+    setResponse('');
     await getImageLabels(formData).then(setResponse);
     formDataRef.current.reset();
+  };
+
+  const capture = async () => {
+    const imageSrc = camera.current.takePhoto();
+    setShowCameraScreen(false);
+    setResponse('');
+    await getImageLabels(imageSrc).then(setResponse);
   };
   
   return (
@@ -145,19 +158,27 @@ export default function Home() {
         <div className="bg-slate-700 rounded-xl p-8">
           
           <form className="mb-6 pb-4 border-b border-slate-500" onSubmit={handleAddNewItem}>
-            <input className="rounded-md bg-slate-600 py-1 px-3 mx-1 w-52 my-2"
+            <input className="rounded-md bg-slate-600 py-1 px-3 mr-1 w-52 my-2"
               placeholder="Enter Item Name"
               type="text"
               value={newItem.name}
               onChange={(e) => setnewItem({...newItem, name:e.target.value})}
             />
-            <input className="rounded-md bg-slate-600 py-1 px-3 mx-1 w-20 my-2"
+            <input className="rounded-md bg-slate-600 py-1 px-3 mr-1 w-20 my-2"
               placeholder="Qty."
               type="number"
               value={newItem.qty}
               onChange={(e) => setnewItem({...newItem, qty:e.target.value})}
             />
-            <button className="border border-black bg-slate-900 py-1 px-2 mx-3 rounded-md text-slate-300" type="submit">Add Item</button>
+            <button className="border border-black bg-slate-900 py-1 px-2 mr-1 rounded-md text-slate-300" type="submit">Add Item</button>
+            <span className='mx-2'>OR</span>
+            <button className="border border-black bg-slate-900 py-1 px-2 mr-1 rounded-md text-slate-300" onClick={(e) => setShowCameraScreen(true)}>
+              Camera
+            </button>
+            <span className='mx-2'>OR</span>
+            <button className="border border-black bg-slate-900 py-1 px-2 mr-1 rounded-md text-slate-300" onClick={(e) => setShowUploadScreen(true)}>
+              Upload
+            </button>
           </form>
 
           <ul>
@@ -175,24 +196,33 @@ export default function Home() {
             )}
           </ul>
 
-          <div className='mt-20 mb-10'>
-            <form className="" action={handleImageInput} ref={formDataRef}>
-              <input className="rounded-md bg-slate-600 px-2 py-1 w-full my-2"
-                placeholder="Paste Image URL"
-                type="text"
-                name='imageURL'
-              />
-              <span>OR</span>
-              <input className="rounded-md bg-slate-600 pr-2 mx-4 w-80 text-slate-200"
-                type="file"
-                name='imageFile'
-                accept="image/*"
-              />
-              <button className="border border-black bg-slate-900 py-2 px-4 rounded-md text-slate-300" type='submit'>Get Response</button>
-            </form>
-          </div>
+          {showCameraScreen && (
+            <div className='my-10 flex'>
+              <Camera ref={camera} aspect={1/1}/>
+              <img src="favicon.ico" className='absolute bottom-0'  width="70px" height="70px" alt="Logo" onClick={capture}/> 
+            </div>
+          )}
 
-          <pre className="">{response}</pre>
+          {showUploadScreen && (
+            <div className='mt-20 mb-10'>
+              <form className="" action={handleImageInput} ref={formDataRef}>
+                <input className="rounded-md bg-slate-600 px-2 py-1 w-full my-2"
+                  placeholder="Paste Image URL"
+                  type="text"
+                  name='imageURL'
+                />
+                <span>OR</span>
+                <input className="rounded-md bg-slate-600 pr-2 mx-4 w-80 text-slate-200"
+                  type="file"
+                  name='imageFile'
+                  accept="image/*"
+                />
+                <button className="border border-black bg-slate-900 py-2 px-4 rounded-md text-slate-300" type='submit'>Get Response</button>
+              </form>
+            </div>
+          )}
+          
+          <pre className="mt-10">{response}</pre>
           
         </div>
 

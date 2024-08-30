@@ -16,16 +16,21 @@ export async function getImageLabels(formData) {
   let imageContentType;
 
   //Check the Input Source
-  if(formData.get("imageFile").size) {
+  if(typeof(formData)==="string") {
+    //From Camera Capture
+    const arrayBuffer = convertDataURL_toArrayBuffer(formData);
+    const imageData = new Uint8Array(arrayBuffer)
+    bodyContent = imageData;
+    imageContentType = "application/octet-stream";
+  }
+  else if(formData.get("imageFile")?.size) {
     //From File Upload
+    const imageFile = formData.get("imageFile");
     
-    //Check for Valid FileType
-    if(!formData.get("imageFile").type.includes("image")) {
-      console.log(formData.get("imageFile").type);
-      return "Upload some Valid Image File-type!";
-    }
+    if(!imageFile.type.includes("image"))
+      return "Upload some Valid Image File-type!"; //Check for Valid Image-FileType
     
-    const arrayBuffer = await formData.get("imageFile").arrayBuffer();
+    const arrayBuffer = await imageFile.arrayBuffer();
     const imageData = new Uint8Array(arrayBuffer);
     bodyContent = imageData;
     imageContentType = "application/octet-stream";
@@ -34,21 +39,22 @@ export async function getImageLabels(formData) {
     //From URL Input 
     const imageURL = formData.get("imageURL");
     
-    //Check for Valid URL
-    try {
-      const urlResponse = await fetch(imageURL);
-      if(!urlResponse.ok)
-        return "Unable to fetch Image from URL (Status not OK)";
-      
-      if(!urlResponse.headers.get('content-type')?.startsWith('image/'))
-        return "That's not a Valid Image URL";
-    }
-    catch(error) {
-      return "That's not a Valid URL";
-    }
+    let urlStatus = await checkURLValidity(imageURL); //Check for Valid Image-URL
+    if(urlStatus != "Valid")
+      return urlStatus;
     
-    bodyContent = { url: imageURL };
-    imageContentType = "application/json";
+    if(imageURL.startsWith('data:image/')) {
+      //For Online DataURL(Base64)
+      const arrayBuffer = convertDataURL_toArrayBuffer(imageURL);
+      const imageData = new Uint8Array(arrayBuffer)
+      bodyContent = imageData;
+      imageContentType = "application/octet-stream";
+    }
+    else {
+      //For actual HTML-URL
+      bodyContent = { url: imageURL };
+      imageContentType = "application/json";
+    }
   }
   else {
     //No Input
@@ -68,7 +74,7 @@ export async function getImageLabels(formData) {
 
     if(result.status==='200')
       return extractData(result.body);
-  
+    
     return "Error! Server respond not OK Status...";
   }
   catch(error) {
@@ -92,4 +98,31 @@ function extractData(result) {
   tagString += caption.text; 
   
   return tagString;
+}
+
+function convertDataURL_toArrayBuffer(dataURL) {
+  
+  const base64Data = dataURL.replace(/^data:image\/[a-z]+;base64,/, ''); //Remove Starting Data-Headers
+  const byteChars = atob(base64Data); //Decode Base64
+  
+  let byteNumbers = new Array(byteChars.length); //Create EmptyArray
+  for (let i = 0; i < byteChars.length; i++)
+    byteNumbers[i] = byteChars.charCodeAt(i); //Copy BinaryData into Array
+  
+  return byteNumbers;
+}
+
+async function checkURLValidity(imageURL) {
+  try {
+    const urlResponse = await fetch(imageURL);
+    if(!urlResponse.ok)
+      return "Unable to fetch Image from URL (Status not OK)";
+    if(!urlResponse.headers.get('content-type')?.startsWith('image/'))
+      return "That's not a Valid Image URL";
+  }
+  catch(error) {
+    return "That's not a Valid URL";
+  }
+  
+  return "Valid";
 }
