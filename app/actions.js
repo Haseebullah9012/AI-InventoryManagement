@@ -1,12 +1,14 @@
 "use server"
 
+import nlp from 'compromise/two';
+import compromise from 'compromise';
+
 //import { ImageAnalysisClient } from "@azure-rest/ai-vision-image-analysis";
 const createClient = require('@azure-rest/ai-vision-image-analysis').default;
 import { AzureKeyCredential } from "@azure/core-auth";
 
 const key = process.env.AZURE_SUBSCRIPTION_KEY;
 const endpoint = process.env.AZURE_ANALYZE_IMAGE_ENDPOINT;
-
 const credential = new AzureKeyCredential(key);
 const client = createClient(endpoint, credential, { apiVersion:"2024-02-01"});
 
@@ -31,7 +33,7 @@ export async function getImageLabels(formData) {
       return "Upload some Valid Image File-type!"; //Check for Valid Image-FileType
     
     const arrayBuffer = await imageFile.arrayBuffer();
-    const imageData = new Uint8Array(arrayBuffer);
+    const imageData = new Uint8Array(arrayBuffer); //ByteArray
     bodyContent = imageData;
     imageContentType = "application/octet-stream";
   }
@@ -60,7 +62,7 @@ export async function getImageLabels(formData) {
     //No Input
     return "Upload either an Image FIle, or Paste an Image URL... "
   }
-  
+
   try {
     const result = await client.path('/imageanalysis:analyze').post({
       body: bodyContent,
@@ -85,19 +87,16 @@ export async function getImageLabels(formData) {
 
 
 function extractData(result) {
-  const tags = result.tagsResult.values;
   const caption = result.captionResult;
-  if(!tags.length)
-    return 'No Objects Detected!';
-
-  let tagString = '';
-  tags.forEach(tag => {
-    tagString += (tag.name + ' ');
-  });
-  tagString += "\n";
-  tagString += caption.text; 
   
-  return tagString;
+  let nouns = nlp(caption.text).match("#Noun").text();
+  let items = nouns.split(' ');
+  
+  if(!items.length)
+    return 'No Objects Detected!';
+  
+  let captionText = caption.text;
+  return {captionText, items};
 }
 
 function convertDataURL_toArrayBuffer(dataURL) {

@@ -29,8 +29,8 @@ export default function Home() {
   
   const [response, setResponse] = useState('');
   const [showCamera, setShowCamera] = useState(false);
+  const [detectedItems, setDetectedItems] = useState([]);
   
-
   useEffect(() => {
     const updateInventory = async () => {
       try {
@@ -52,7 +52,7 @@ export default function Home() {
   }, []);
 
   const handleAddNewItem = async (e) => {
-    e.preventDefault();
+    e?.preventDefault();
 
     if (newItem.name.trim() === '') {
       return; //No Item Name Entered
@@ -81,10 +81,11 @@ export default function Home() {
     }
     //Add New Item
     else {
+      
       try {
         const docRef = await addDoc(collection(db, 'inventory'), newItem);
-        setInventory([...inventory, {id:docRef.id, name:newItem.name, qty:newItem.qty}]);
         console.log('Document written with ID: ', docRef.id);
+        setInventory([...inventory, {id:docRef.id, ...newItem}]);
         setnewItem({name:'', qty:''});
       }
       catch (error) {
@@ -159,13 +160,13 @@ export default function Home() {
             </form>
             
             <span className='mx-2'>OR</span>
-            <Drawer onClose={() => { setResponse(''); setShowCamera(false); }}>
+            <Drawer onClose={() => { setResponse(''); setDetectedItems([]); }}>
               <DrawerTrigger className="border border-black bg-slate-900 py-1 px-2 mr-1 rounded-md text-slate-300">Camera</DrawerTrigger>
               <DrawerCameraScreen />
             </Drawer>
 
             <span className='mx-2'>OR</span>
-            <Drawer onClose={() => setResponse('')}>
+            <Drawer onClose={() => { setResponse(''); setDetectedItems([]); } }>
               <DrawerTrigger className="border border-black bg-slate-900 py-1 px-2 mr-1 rounded-md text-slate-300">Upload</DrawerTrigger>
               <DrawerUploadImage />
             </Drawer>
@@ -194,6 +195,11 @@ export default function Home() {
 
   
   /* Components */
+  
+  function handleChosenItem(itemName) {
+    newItem.name = itemName.charAt(0).toUpperCase() + itemName.slice(1); //Capitalize Word
+    handleAddNewItem();
+  };
 
   function DrawerUploadImage() {
     
@@ -201,7 +207,15 @@ export default function Home() {
     
     const handleImageInput = async (formData) => {
       setResponse('Waiting...'); //This is not Working
-      await getImageLabels(formData).then(setResponse);
+      const result = await getImageLabels(formData);
+      if(typeof(result)==='string')
+        setResponse(result); //Some kind of Error
+      else {
+        //Actual Result
+        setResponse(result.captionText + "\n Choose your Items...");
+        setDetectedItems(result.items);
+      }
+      
       formDataRef.current.reset();
     };
     
@@ -226,6 +240,16 @@ export default function Home() {
 
           <pre className="mt-2">{response}</pre>
 
+          <ul className='flex flex-wrap'>
+            {detectedItems.map((item, id) => (
+              <li key={id} className="my-2 px-2 py-1 mx-1 border-2 rounded-lg border-slate-300 text-slate-200">
+                <DrawerClose onClick={() => handleChosenItem(item)}>
+                  {item}
+                </DrawerClose>
+              </li>
+            ))}
+          </ul>
+
         </DrawerHeader>
       </DrawerContent>  
     );
@@ -239,7 +263,14 @@ export default function Home() {
       const imageSrc = camera.current.takePhoto();
       setShowCamera(false);
       setResponse('Waiting...');
-      await getImageLabels(imageSrc).then(setResponse);
+      const result = await getImageLabels(imageSrc);
+      if(typeof(result)==='string')
+        setResponse(result); //Some kind of Error
+      else {
+        //Actual Result
+        setResponse(result.captionText + "\n Choose your Items...");
+        setDetectedItems(result.items);
+      }
     };
 
     const handleOpenCamera = () => {
@@ -259,12 +290,24 @@ export default function Home() {
               <div className='absolute bottom-10 left-[40%] right-[40%] text-center'>
                 <button className='border-4 border-slate-900 bg-slate-200 rounded-full w-12 h-12' onClick={captureImage}></button>
               </div>
-              <DrawerClose className='absolute top-4 left-[38%] right-[38%] border border-slate-900 bg-slate-800 py-1 px-2 rounded-md'>
+              <DrawerClose className='absolute top-4 left-[38%] right-[38%] border border-slate-900 bg-slate-800 py-1 px-2 rounded-md' onClick={() => setShowCamera(false)}>
                 Close
               </DrawerClose>
             </div>
           )}
-          <pre className="mt-8">{response}</pre>
+          
+          <pre className="mt-2">{response}</pre>
+
+          <ul className='flex flex-wrap'>
+            {detectedItems.map((item, id) => (
+              <li key={id} className="my-2 px-2 py-1 mx-1 border-2 rounded-lg border-slate-300 text-slate-200">
+                <DrawerClose onClick={() => handleChosenItem(item)}>
+                  {item}
+                </DrawerClose>
+              </li>
+            ))}
+          </ul>
+
         </DrawerHeader>
       </DrawerContent>
     );
