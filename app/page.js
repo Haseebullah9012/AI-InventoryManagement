@@ -38,7 +38,7 @@ export default function Home() {
         
         const inventoryList = [];
         docs.forEach((doc) => {
-          let item = { id:doc.id, name:doc.data().name, qty:doc.data().qty};
+          let item = { id:doc.id, name:doc.data().name, qty:parseInt(doc.data().qty)};
           inventoryList.push(item);
         })
         setInventory(inventoryList);
@@ -59,14 +59,14 @@ export default function Home() {
     } 
     if(newItem.qty==='')
       newItem.qty = 1; //Default Qty.  
-    
+    newItem.qty = parseInt(newItem.qty);
 
     //Item already Exists
     if(inventory.some((item) => item.name === newItem.name)) {
       try {
         let temp = [...inventory];
         let index = temp.findIndex((i) => i.name === newItem.name);
-        temp[index] = { ...temp[index], qty: parseInt(temp[index].qty) + parseInt(newItem.qty) };
+        temp[index] = { ...temp[index], qty: temp[index].qty + newItem.qty };
         
         const itemQty = temp[index].qty;
         const docId = temp[index].id;
@@ -81,7 +81,6 @@ export default function Home() {
     }
     //Add New Item
     else {
-      
       try {
         const docRef = await addDoc(collection(db, 'inventory'), newItem);
         console.log('Document written with ID: ', docRef.id);
