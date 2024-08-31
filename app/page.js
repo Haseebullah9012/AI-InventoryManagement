@@ -140,7 +140,7 @@ export default function Home() {
       <div className="max-w-5xl w-full items-center justify-between font-mono text-s">
         <h1 className="text-4xl p-4 text-center">AI Inventory Management</h1>
         
-        <div className="bg-slate-700 rounded-xl p-8">
+        <div className="bg-slate-700 rounded-xl p-6 sm:p-8">
           
           <div className="mb-6 pb-4 border-b border-slate-500" >
             <form className='inline-block' onSubmit={handleAddNewItem}>
@@ -156,7 +156,7 @@ export default function Home() {
                 value={newItem.qty}
                 onChange={(e) => setnewItem({...newItem, qty:e.target.value})}
               />
-              <button className="border border-black bg-slate-900 py-1 px-2 mr-1 rounded-md text-slate-300" type="submit">Add Item</button>
+              <button className="border border-black bg-slate-900 py-1 px-2 mb-2 mr-1 rounded-md text-slate-300" type="submit">Add Item</button>
             </form>
             
             <span className='mx-2'>OR</span>
@@ -221,24 +221,24 @@ export default function Home() {
     
     return (
       <DrawerContent className="bg-slate-800 text-slate-100">
-        <DrawerHeader className="mb-8 p-8 sm:p-10">
+        <DrawerHeader className="inline-block p-6 sm:p-10 mb-8">
           <DrawerTitle className="text-slate-300 mb-2">Get some Inventory Item's Image Online or Upload from Device</DrawerTitle>
-          <form action={handleImageInput} ref={formDataRef}>
-            <input className="rounded-md bg-slate-600 px-2 py-1 w-5/6 my-2 block"
+          <form action={handleImageInput} ref={formDataRef} className='text-sm'>
+            <input className="rounded-md bg-slate-600 px-2 py-1 w-5/6 my-1 block"
               placeholder="Paste Image URL"
               type="text"
               name='imageURL'
             />
             <span>OR</span>
-            <input className="rounded-md bg-slate-600 pr-2 mx-4 w-80 mb-6 text-slate-200"
+            <input className="rounded-md bg-slate-600 pr-2 mx-4 my-1 w-60 mb-6 text-slate-200"
               type="file"
               name='imageFile'
               accept="image/*"
             />
-            <button className="border border-black bg-slate-900 py-2 px-4 rounded-md text-slate-300" type='submit'>Get Response</button>
+            <button className="border border-black bg-slate-900 py-2 px-4 rounded-md text-slate-300 text-sm" type='submit'>Analyze Image</button>
           </form>
 
-          <pre className="mt-2">{response}</pre>
+          <pre className="mt-2 text-wrap">{response}</pre>
 
           <ul className='flex flex-wrap'>
             {detectedItems.map((item, id) => (
@@ -280,15 +280,15 @@ export default function Home() {
 
     return (
       <DrawerContent className={`bg-slate-800 text-slate-100 ${showCamera ? "h-full":"h-2/5"} `}>
-        <DrawerHeader className="inline-block p-8 sm:p-10">
+        <DrawerHeader className="inline-block p-8 sm:p-10 mb-8">
           <DrawerTitle className="text-slate-300 mb-2">Take an Image of Inventory Items with your Device Camera</DrawerTitle>
           <button className="border border-black bg-slate-900 py-1 px-2 mr-1 rounded-md text-slate-300" onClick={handleOpenCamera}>Open Camera</button>
 
           {showCamera && (
             <div>
-              <Camera ref={camera}/>
+              <Camera ref={camera} facingMode='environment'/>
               <div className='absolute bottom-10 left-[40%] right-[40%] text-center'>
-                <button className='border-4 border-slate-900 bg-slate-200 rounded-full w-12 h-12' onClick={captureImage}></button>
+                <button className='border-8 border-slate-900 bg-slate-200 rounded-full w-16 h-16 md:w-12 md:h-12' onClick={captureImage}></button>
               </div>
               <DrawerClose className='absolute top-4 left-[38%] right-[38%] border border-slate-900 bg-slate-800 py-1 px-2 rounded-md' onClick={() => setShowCamera(false)}>
                 Close
